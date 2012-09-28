@@ -13,7 +13,11 @@
 
 (defn generate-key [] (clojure.string/replace (str (java.util.UUID/randomUUID)) "-" ""))
 
-(def conn (redis/connection-map {}))
+(def conn
+  (if-let [uri-str (System/getenv "REDISTOGO_URL")]
+    (let [uri (java.net.URI. uri-str)]
+      (redis/connection-map {:host (.getHost uri) :port (.getPort uri)}))
+    (redis/connection-map {})))
 
 (defn get-list [list-key]
   (let [saved-list (redis/with-connection conn (redis/hgetall list-key))]

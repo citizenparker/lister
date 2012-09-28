@@ -19,5 +19,9 @@
 
 (def app (handler/site (middleware/wrap-reload all-routes ['lister.views])))
 
+(defn start [port]
+  (defonce server (ring.adapter.jetty/run-jetty (var app) {:port port :join? false})))
+
 (defn -main []
-  (defonce server (ring.adapter.jetty/run-jetty (var app) {:port 6464 :join? false})))
+  (let [port (Integer. (or (System/getenv "PORT") 6464))]
+    (start port)))
