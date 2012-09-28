@@ -21,21 +21,27 @@
                              :password (last (clojure.string/split (.getUserInfo uri) #":"))}))
     (redis/connection-map {})))
 
+(defn exec-command
+  "This will attempt to precede a command with auth. This happens even when no password is specified, but will silently fail in that case."
+  [rcommand]
+  (let [results (redis/with-connection conn (redis/auth (conn :password)) rcommand)]
+    (second results)))
+
 (defn get-list [list-key]
-  (let [saved-list (redis/with-connection conn (redis/hgetall list-key))]
+  (let [saved-list (exec-command (redis/hgetall list-key))]
     (if (empty? saved-list)
       new-list
       (apply array-map saved-list))))
 
 (defn upsert-list-item [list-key item-key item]
-  (redis/with-connection conn (redis/hset list-key item-key item)))
+  (exec-command (redis/hset list-key item-key item)))
 
 (defn remove-from-list [list-key item-key]
-  (redis/with-connection conn (redis/hdel list-key item-key)))
+  (exec-command (redis/hdel list-key item-key)))
 
 (defn clear-list [list-key]
-  (let [item-keys (remove #{*name-key*} (redis/with-connection conn (redis/hkeys list-key)))]
-    (redis/with-connection conn (apply redis/hdel (flatten [list-key item-keys])))))
+  (let [item-keys (remove #{*name-key*} (exec-command (redis/hkeys list-key)))]
+    (exec-command (apply redis/hdel (flatten [list-key item-keys])))))
 
 (defn add-to-list [list-key item]
   (upsert-list-item list-key (generate-key) item))
