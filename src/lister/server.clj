@@ -1,24 +1,23 @@
 (ns lister.server
-  (:require [lister.utils :as utils]
-            [compojure.core :as comp]
+  (:require [lister.views :as views]
+            [lister.middleware :as middleware]
+            [compojure.core :as compojure]
             [compojure.route :as route]
-            [ring.adapter.jetty :as ring-jetty]
-            [net.cgrand.enlive-html :as html]))
+            [compojure.handler :as handler]
+            [ring.adapter.jetty :as jetty]))
 
-(html/deftemplate index "html/index.html" [context])
+(compojure/defroutes all-routes
+                     (compojure/GET "/" [] (views/index))
+                     (compojure/GET "/new" [] (views/new-list))
+                     (compojure/GET "/list/:list-key" [list-key] (views/show-list list-key))
+                     (compojure/POST "/list/:list-key/new-item" [list-key new-item] (views/new-item list-key new-item))
+                     (compojure/POST "/list/:list-key/rename" [list-key name] (views/rename-list list-key name))
+                     (compojure/POST "/list/:list-key/clear" [list-key] (views/clear-list list-key))
+                     (compojure/POST "/list/:list-key/done/:item-key" [list-key item-key] (views/item-done list-key item-key))
+                     (route/files "/")
+                     (route/not-found "<h1>Page not found!</h1>"))
 
-(defn new-list [c] (ring.util.response/redirect (str "/lists/" (utils/new-uuid))))
-
-(comp/defroutes all-routes
-  (comp/GET "/" [] index)
-  (comp/GET "/new" [] new-list)
-  (route/files "/")
-  (route/not-found "<h1>Page not found!</h1>"))
+(def app (handler/site (middleware/wrap-reload all-routes ['lister.views])))
 
 (defn -main []
-  (defonce server (ring-jetty/run-jetty (var all-routes) {:port 6464 :join? false})))
-
-(defn stop []
-  (.stop server))
-
-(+ 5 6)
+  (defonce server (ring.adapter.jetty/run-jetty (var app) {:port 6464 :join? false})))

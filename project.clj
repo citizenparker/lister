@@ -7,5 +7,6 @@
                  [compojure "1.1.3"]
                  [ring/ring-core "1.1.5"]
                  [ring/ring-jetty-adapter "1.1.5"]
-                 [enlive "1.0.1"]]
+                 [enlive "1.0.1"]
+                 [accession "0.1.1" :exclusions [org.clojure/clojure]]]
   :main lister.server)
