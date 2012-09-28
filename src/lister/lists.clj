@@ -16,7 +16,9 @@
 (def conn
   (if-let [uri-str (System/getenv "REDISTOGO_URL")]
     (let [uri (java.net.URI. uri-str)]
-      (redis/connection-map {:host (.getHost uri) :port (.getPort uri)}))
+      (redis/connection-map {:host (.getHost uri)
+                             :port (.getPort uri)
+                             :password (last (clojure.string/split (.getUserInfo uri) #":"))}))
     (redis/connection-map {})))
 
 (defn get-list [list-key]
