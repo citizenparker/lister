@@ -3,13 +3,13 @@
 
 (def *name-key* "name")
 
-(def dummy-list { *name-key* "My Cool List" "123" "Soap" "234" "Popcorn"})
+(def *default-name* "My Cool List")
 
-(defn list-name [list] (list *name-key*))
+(defn list-name [list] (or (list *name-key*) *default-name*))
 
 (defn list-items [list] (dissoc list *name-key*))
 
-(def new-list {*name-key* "My Cool List"})
+(def new-list {})
 
 (defn generate-key [] (clojure.string/replace (str (java.util.UUID/randomUUID)) "-" ""))
 
